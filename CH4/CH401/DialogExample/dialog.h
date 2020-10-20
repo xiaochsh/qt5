@@ -8,6 +8,7 @@
 #include <QFrame>
 
 #include "inputdlg.h"
+#include "msgboxdlg.h"
 
 class Dialog : public QDialog
 {
@@ -27,11 +28,19 @@ private:
     QPushButton *inputBtn;
     InputDlg *inputDlg;
 
+    QPushButton *msgBtn;
+    MsgBoxDlg *msgDlg;
+
+    QPushButton *customBtn;
+    QLabel *label;
+
 private slots:
     void showFile();
     void showColor();
     void showFont();
     void showInputDlg();
+    void showMsgDlg();
+    void showCustomDlg();
 
 public:
     Dialog(QWidget *parent = nullptr);
