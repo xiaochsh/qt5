@@ -17,10 +17,12 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += \
     main.cpp \
-    imgprocessor.cpp
+    imgprocessor.cpp \
+    showwidget.cpp
 
 HEADERS += \
-    imgprocessor.h
+    imgprocessor.h \
+    showwidget.h
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
