@@ -58,6 +58,22 @@ private:
     QAction *rotate270Action;
 
     QAction *mirrorVerticalAction;
+    QAction *mirrorHorizontalAction;
 
+    QAction *undoAction;
+    QAction *redoAction;
+
+    QToolBar *fileTool;
+    QToolBar *zoomTool;
+    QToolBar *rotateTool;
+    QToolBar *mirrorTool;
+
+    QToolBar *doToolBar;
+
+protected slots:
+    void ShowNewFile();
+    void ShowOpenFile();
+    void ShowPrintText();
+    void ShowPrintImage();
 };
 #endif // IMGPROCESSOR_H
