@@ -14,6 +14,8 @@
 #include <QToolButton>
 #include <QTextCharFormat>
 #include "showwidget.h"
+#include <QFontComboBox>
+#include <QToolButton>
 
 class ImgProcessor : public QMainWindow
 {
@@ -70,10 +72,36 @@ private:
 
     QToolBar *doToolBar;
 
+    QLabel *fontLabel1;
+    QFontComboBox *fontComboBox;
+    QLabel *fontLabel2;
+    QComboBox *sizeComboBox;
+    QToolButton *boldBtn;
+    QToolButton *italicBtn;
+    QToolButton *underlineBtn;
+    QToolButton *colorBtn;
+
+    QToolBar *fontToolBar;
+
+
 protected slots:
     void ShowNewFile();
     void ShowOpenFile();
     void ShowPrintText();
     void ShowPrintImage();
+    void ShowZoomIn();
+    void ShowZoomOut();
+    void ShowRotate90();
+    void ShowRotate180();
+    void ShowRotate270();
+    void ShowMirrorVertical();
+    void ShowMirrorHorizontal();
+    void ShowFontComboBox(QString comboStr);
+    void ShowSizeSpinBox(QString spinValue);
+    void ShowBoldBtn();
+    void ShowItalicBtn();
+    void ShowUnderlineBtn();
+    void ShowColorBtn();
+    void ShowCurrentFormatChangerd(const QTextCharFormat &fmt);
 };
 #endif // IMGPROCESSOR_H

@@ -7,6 +7,11 @@
 #include <QPrintDialog>
 #include <QTextDocument>
 #include <QPainter>
+#include <QMatrix>
+#include <QFontDatabase>
+#include <QString>
+#include <QColor>
+#include <QColorDialog>
 
 ImgProcessor::ImgProcessor(QWidget *parent)
     : QMainWindow(parent)
@@ -16,6 +21,34 @@ ImgProcessor::ImgProcessor(QWidget *parent)
     showWidget = new ShowWidget(this);
     setCentralWidget (showWidget);
 
+    fontLabel1 = new QLabel(tr("字体："));
+    fontComboBox = new QFontComboBox;
+    fontComboBox->setFontFilters (QFontComboBox::ScalableFonts);
+
+    fontLabel2 = new QLabel(tr("字号:"));
+    sizeComboBox = new QComboBox;
+    QFontDatabase db;
+    foreach (int size, db.standardSizes ())
+    {
+        sizeComboBox->addItem (QString::number (size));
+    }
+
+    boldBtn = new QToolButton;
+    boldBtn->setIcon (QIcon("bold.png"));
+    boldBtn->setCheckable (true);
+
+    italicBtn = new QToolButton;
+    italicBtn->setIcon (QIcon("italic.png"));
+    italicBtn->setCheckable (true);
+
+    underlineBtn = new QToolButton;
+    underlineBtn->setIcon (QIcon("underline.png"));
+    underlineBtn->setCheckable (true);
+
+    colorBtn = new QToolButton;
+    colorBtn->setIcon (QIcon("color.png"));
+    colorBtn->setCheckable (true);
+
     createActions ();
     createMenus ();
     createToolBars ();
@@ -24,6 +57,14 @@ ImgProcessor::ImgProcessor(QWidget *parent)
     {
         showWidget->imageLabel->setPixmap (QPixmap::fromImage (img));
     }
+
+    connect(fontComboBox, static_cast<void (QComboBox::*)(const QString &)>(&QComboBox::activated), this, &ImgProcessor::ShowFontComboBox);
+    connect(sizeComboBox, static_cast<void (QComboBox::*)(const QString &)>(&QComboBox::activated), this, &ImgProcessor::ShowSizeSpinBox);
+    connect(boldBtn, &QToolButton::clicked, this, &ImgProcessor::ShowBoldBtn);
+    connect(italicBtn, &QToolButton::clicked, this, &ImgProcessor::ShowItalicBtn);
+    connect(underlineBtn, &QToolButton::clicked, this, &ImgProcessor::ShowUnderlineBtn);
+    connect(colorBtn, &QToolButton::clicked, this, &ImgProcessor::ShowColorBtn);
+    connect(showWidget->text, static_cast<void (QTextEdit::*)(const QTextCharFormat &)>(&QTextEdit::currentCharFormatChanged), this, &ImgProcessor::ShowCurrentFormatChangerd);
 }
 
 ImgProcessor::~ImgProcessor()
@@ -76,24 +117,31 @@ void ImgProcessor::createActions()
 
     zoomInAction = new QAction(QIcon("zoomin.png"), tr("放大"), this);
     zoomInAction->setToolTip (tr("放大一张图片"));
+    connect (zoomInAction, &QAction::triggered, this, &ImgProcessor::ShowZoomIn);
 
     zoomOutAction = new QAction(QIcon("zoomout.png"), tr("缩小"), this);
     zoomOutAction->setToolTip (tr("缩小一张图片"));
+    connect (zoomOutAction, &QAction::triggered, this, &ImgProcessor::ShowZoomOut);
 
     rotate90Action = new QAction(QIcon("rotate90.png"), tr("旋转90°"), this);
     rotate90Action->setToolTip (tr("将一幅图旋转90°"));
+    connect (rotate90Action, &QAction::triggered, this, &ImgProcessor::ShowRotate90);
 
     rotate180Action = new QAction(QIcon("rotate180.png"), tr("旋转180°"), this);
     rotate180Action->setToolTip (tr("将一幅图旋转180°"));
+    connect (rotate180Action, &QAction::triggered, this, &ImgProcessor::ShowRotate180);
 
     rotate270Action = new QAction(QIcon("rotate270.png"), tr("旋转270°"), this);
     rotate270Action->setToolTip (tr("将一幅图旋转270°"));
+    connect (rotate270Action, &QAction::triggered, this, &ImgProcessor::ShowRotate270);
 
     mirrorVerticalAction = new QAction(QIcon("mirrorVertical.png"), tr("纵向镜像"), this);
     mirrorVerticalAction->setToolTip (tr("对一张图做纵向镜像"));
+    connect (mirrorVerticalAction, &QAction::triggered, this, &ImgProcessor::ShowMirrorVertical);
 
     mirrorHorizontalAction = new QAction(QIcon("mirrorHorizontal.png"), tr("横向镜像"), this);
     mirrorHorizontalAction->setToolTip (tr("对一张图做横向镜像"));
+    connect (mirrorHorizontalAction, &QAction::triggered, this, &ImgProcessor::ShowMirrorHorizontal);
 
     undoAction = new QAction(QIcon("undo.png"), tr("撤销"), this);
     connect (undoAction, &QAction::triggered, showWidget->text, &QTextEdit::undo);
@@ -157,6 +205,18 @@ void ImgProcessor::createToolBars()
     doToolBar->addAction (undoAction);
     doToolBar->addAction (redoAction);
     doToolBar->setMovable (false);
+
+    fontToolBar = addToolBar ("Font");
+    fontToolBar->addWidget (fontLabel1);
+    fontToolBar->addWidget (fontComboBox);
+    fontToolBar->addWidget (fontLabel2);
+    fontToolBar->addWidget (sizeComboBox);
+    fontToolBar->addSeparator ();
+    fontToolBar->addWidget (boldBtn);
+    fontToolBar->addWidget (italicBtn);
+    fontToolBar->addWidget (underlineBtn);
+    fontToolBar->addSeparator ();
+    fontToolBar->addWidget (colorBtn);
 }
 
 void ImgProcessor::ShowNewFile ()
@@ -228,3 +288,132 @@ void ImgProcessor::ShowPrintImage ()
     }
 }
 
+void ImgProcessor::ShowZoomIn ()
+{
+    if (img.isNull ())
+        return;
+    QMatrix matrix;
+    matrix.scale (2, 2);
+    img = img.transformed (matrix);
+    showWidget->imageLabel->setPixmap (QPixmap::fromImage (img));
+}
+
+void ImgProcessor::ShowZoomOut ()
+{
+    if (img.isNull ())
+        return;
+    QMatrix matrix;
+    matrix.scale (0.5, 0.5);
+    img = img.transformed (matrix);
+    showWidget->imageLabel->setPixmap (QPixmap::fromImage (img));
+}
+
+void ImgProcessor::ShowRotate90 ()
+{
+    if (img.isNull ())
+        return;
+    QMatrix matrix;
+    matrix.rotate (90);
+    img = img.transformed (matrix);
+    showWidget->imageLabel->setPixmap (QPixmap::fromImage (img));
+}
+
+void ImgProcessor::ShowRotate180 ()
+{
+    if (img.isNull ())
+        return;
+    QMatrix matrix;
+    matrix.rotate (180);
+    img = img.transformed (matrix);
+    showWidget->imageLabel->setPixmap (QPixmap::fromImage (img));
+}
+
+void ImgProcessor::ShowRotate270 ()
+{
+    if (img.isNull ())
+        return;
+    QMatrix matrix;
+    matrix.rotate (270);
+    img = img.transformed (matrix);
+    showWidget->imageLabel->setPixmap (QPixmap::fromImage (img));
+}
+
+void ImgProcessor::ShowMirrorVertical ()
+{
+    if (img.isNull ())
+        return;
+    img = img.mirrored (false, true); // mirrored(x_flag, y_flag)
+    showWidget->imageLabel->setPixmap (QPixmap::fromImage (img));
+}
+
+void ImgProcessor::ShowMirrorHorizontal ()
+{
+    if (img.isNull ())
+        return;
+    img = img.mirrored (true, false);
+    showWidget->imageLabel->setPixmap (QPixmap::fromImage (img));
+}
+
+void ImgProcessor::ShowFontComboBox (QString comboStr)
+{
+    QTextCharFormat fmt;
+    fmt.setFontFamily (comboStr);
+    mergeFormat (fmt);
+}
+
+void ImgProcessor::mergeFormat(QTextCharFormat format)
+{
+    QTextCursor cursor = showWidget->text->textCursor ();
+    if (!cursor.hasSelection ())
+        cursor.select (QTextCursor::WordUnderCursor);
+    cursor.mergeCharFormat (format);
+    showWidget->text->mergeCurrentCharFormat (format);
+}
+
+void ImgProcessor::ShowSizeSpinBox (QString spinValue)
+{
+    QTextCharFormat fmt;
+    fmt.setFontPointSize (spinValue.toFloat ());
+    showWidget->text->mergeCurrentCharFormat (fmt);
+}
+
+void ImgProcessor::ShowBoldBtn ()
+{
+    QTextCharFormat fmt;
+    fmt.setFontWeight (boldBtn->isChecked () ? QFont::Bold : QFont::Normal);
+    showWidget->text->mergeCurrentCharFormat (fmt);
+}
+
+void ImgProcessor::ShowItalicBtn ()
+{
+    QTextCharFormat fmt;
+    fmt.setFontItalic (italicBtn->isChecked ());
+    showWidget->text->mergeCurrentCharFormat (fmt);
+}
+
+void ImgProcessor::ShowUnderlineBtn ()
+{
+    QTextCharFormat fmt;
+    fmt.setFontUnderline (underlineBtn->isChecked ());
+    showWidget->text->mergeCurrentCharFormat (fmt);
+}
+
+void ImgProcessor::ShowColorBtn ()
+{
+    QColor color = QColorDialog::getColor (Qt::red, this);
+    if (color.isValid ())
+    {
+        QTextCharFormat fmt;
+        fmt.setForeground (color);
+        showWidget->text->mergeCurrentCharFormat (fmt);
+    }
+}
+
+void ImgProcessor::ShowCurrentFormatChangerd (const QTextCharFormat & fmt)
+{
+    fontComboBox->setCurrentIndex (fontComboBox->findText (fmt.fontFamily ()));
+    sizeComboBox->setCurrentIndex (sizeComboBox->findText (QString::number (fmt.fontPointSize ())));
+    boldBtn->setChecked (fmt.font ().bold ());
+    italicBtn->setChecked (fmt.fontItalic ());
+    underlineBtn->setChecked (fmt.fontUnderline ());
+}
