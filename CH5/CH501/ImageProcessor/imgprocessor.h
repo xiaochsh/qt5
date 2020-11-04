@@ -83,6 +83,16 @@ private:
 
     QToolBar *fontToolBar;
 
+    QLabel *listLabel;
+    QComboBox *listComboBox;
+    QActionGroup *actionGroup;
+    QAction *leftAction;
+    QAction *rightAction;
+    QAction *centerAction;
+    QAction *justifyAction;
+
+    QToolBar *listToolBar;
+
 
 protected slots:
     void ShowNewFile();
@@ -103,5 +113,8 @@ protected slots:
     void ShowUnderlineBtn();
     void ShowColorBtn();
     void ShowCurrentFormatChangerd(const QTextCharFormat &fmt);
+    void ShowList(int);
+    void ShowAlignment(QAction *act);
+    void ShowCursorPositionChanged();
 };
 #endif // IMGPROCESSOR_H

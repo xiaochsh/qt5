@@ -12,6 +12,8 @@
 #include <QString>
 #include <QColor>
 #include <QColorDialog>
+#include <QActionGroup>
+#include <QTextList>
 
 ImgProcessor::ImgProcessor(QWidget *parent)
     : QMainWindow(parent)
@@ -49,6 +51,18 @@ ImgProcessor::ImgProcessor(QWidget *parent)
     colorBtn->setIcon (QIcon("color.png"));
     colorBtn->setCheckable (true);
 
+    listLabel = new QLabel(tr("排序"));
+    listComboBox = new QComboBox;
+    listComboBox->addItem ("Standard");
+    listComboBox->addItem ("QTextListFormat::ListDisc");
+    listComboBox->addItem ("QTextListFormat::ListCircle");
+    listComboBox->addItem ("QTextListFormat::ListSquare");
+    listComboBox->addItem ("QTextListFormat::ListDecimal");
+    listComboBox->addItem ("QTextListFormat::ListLowerAlpha");
+    listComboBox->addItem ("QTextListFormat::ListUpperAlpha");
+    listComboBox->addItem ("QTextListFormat::ListLowerRoman");
+    listComboBox->addItem ("QTextListFormat::ListUpperRoman");
+
     createActions ();
     createMenus ();
     createToolBars ();
@@ -65,6 +79,12 @@ ImgProcessor::ImgProcessor(QWidget *parent)
     connect(underlineBtn, &QToolButton::clicked, this, &ImgProcessor::ShowUnderlineBtn);
     connect(colorBtn, &QToolButton::clicked, this, &ImgProcessor::ShowColorBtn);
     connect(showWidget->text, static_cast<void (QTextEdit::*)(const QTextCharFormat &)>(&QTextEdit::currentCharFormatChanged), this, &ImgProcessor::ShowCurrentFormatChangerd);
+
+    connect(listComboBox, static_cast<void (QComboBox::*) (int)> (&QComboBox::activated), this, &ImgProcessor::ShowList);
+    connect(showWidget->text->document (), SIGNAL(undoAvailable(bool)), undoAction, SLOT(setChecked(bool)));
+    connect(showWidget->text->document (), SIGNAL(redoAvailable(bool)), redoAction, SLOT(setChecked(bool)));
+    connect(showWidget->text, &QTextEdit::cursorPositionChanged, this, &ImgProcessor::ShowCursorPositionChanged);
+
 }
 
 ImgProcessor::~ImgProcessor()
@@ -148,6 +168,22 @@ void ImgProcessor::createActions()
 
     redoAction = new QAction(QIcon("redo.png"), tr("重做"), this);
     connect (redoAction, &QAction::triggered, showWidget->text, &QTextEdit::redo);
+
+    actionGroup = new QActionGroup(this);
+
+    leftAction = new QAction(QIcon("left.png"), "左对齐", actionGroup);
+    leftAction->setCheckable (true);
+
+    rightAction = new QAction(QIcon("right.png"), "右对齐", actionGroup);
+    rightAction->setCheckable (true);
+
+    centerAction = new QAction(QIcon("center.png"), "居中", actionGroup);
+    centerAction->setCheckable (true);
+
+    justifyAction = new QAction(QIcon("justify.png"), "两端对齐", actionGroup);
+    justifyAction->setCheckable (true);
+
+    connect (actionGroup, static_cast<void (QActionGroup::*) (QAction *)> (&QActionGroup::triggered), this, &ImgProcessor::ShowAlignment);
 }
 
 void ImgProcessor::createMenus()
@@ -217,6 +253,14 @@ void ImgProcessor::createToolBars()
     fontToolBar->addWidget (underlineBtn);
     fontToolBar->addSeparator ();
     fontToolBar->addWidget (colorBtn);
+
+    this->addToolBarBreak(Qt::TopToolBarArea);
+
+    listToolBar = addToolBar ("list");
+    listToolBar->addWidget (listLabel);
+    listToolBar->addWidget (listComboBox);
+    listToolBar->addSeparator ();
+    listToolBar->addActions (actionGroup->actions ());
 }
 
 void ImgProcessor::ShowNewFile ()
@@ -416,4 +460,83 @@ void ImgProcessor::ShowCurrentFormatChangerd (const QTextCharFormat & fmt)
     boldBtn->setChecked (fmt.font ().bold ());
     italicBtn->setChecked (fmt.fontItalic ());
     underlineBtn->setChecked (fmt.fontUnderline ());
+}
+
+void ImgProcessor::ShowAlignment (QAction *act)
+{
+    if (act == leftAction)
+        showWidget->text->setAlignment (Qt::AlignLeft);
+    if (act == rightAction)
+        showWidget->text->setAlignment (Qt::AlignRight);
+    if (act == centerAction)
+        showWidget->text->setAlignment (Qt::AlignCenter);
+    if (act == justifyAction)
+        showWidget->text->setAlignment (Qt::AlignJustify);
+}
+
+void ImgProcessor::ShowCursorPositionChanged ()
+{
+    if (showWidget->text->alignment () == Qt::AlignLeft)
+        leftAction->setChecked (true);
+    if (showWidget->text->alignment () == Qt::AlignRight)
+        rightAction->setChecked (true);
+    if (showWidget->text->alignment () == Qt::AlignCenter)
+        centerAction->setChecked (true);
+    if (showWidget->text->alignment () == Qt::AlignJustify)
+        justifyAction->setChecked (true);
+}
+
+void ImgProcessor::ShowList (int index)
+{
+    QTextCursor cursor = showWidget->text->textCursor ();
+
+    if (index != 0)
+    {
+        QTextListFormat::Style style = QTextListFormat::ListDisc;
+        switch (index)
+        {
+        default:
+        case 1:
+            style = QTextListFormat::ListDisc; break;
+        case 2:
+            style = QTextListFormat::ListCircle; break;
+        case 3:
+            style = QTextListFormat::ListSquare; break;
+        case 4:
+            style = QTextListFormat::ListDecimal; break;
+        case 5:
+            style = QTextListFormat::ListLowerAlpha; break;
+        case 6:
+            style = QTextListFormat::ListUpperAlpha; break;
+        case 7:
+            style = QTextListFormat::ListLowerRoman; break;
+        case 8:
+            style = QTextListFormat::ListUpperRoman; break;
+        }
+        cursor.beginEditBlock ();
+
+        QTextBlockFormat blockFmt = cursor.blockFormat ();
+        QTextListFormat listFmt;
+
+        if (cursor.currentList ())
+        {
+            listFmt = cursor.currentList ()->format();
+        }
+        else
+        {
+            listFmt.setIndent (blockFmt.indent () + 1);
+            blockFmt.setIndent (0);
+            cursor.setBlockFormat (blockFmt);
+        }
+        listFmt.setStyle (style);
+        cursor.createList (listFmt);
+
+        cursor.endEditBlock ();
+    }
+    else
+    {
+        QTextBlockFormat bfmt;
+        bfmt.setObjectIndex (-1);
+        cursor.mergeBlockFormat (bfmt);
+    }
 }
