@@ -31,6 +31,8 @@ private:
     QLabel *penStyleLabel;
     QComboBox *penStyleComboBox;
     QLabel *penCapLabel;
+    QComboBox *penCapComboBox;
+    QLabel *penJoinLabel;
     QComboBox *penJoinComboBox;
     QLabel *fillRuleLabel;
     QComboBox *fillRuleComboBox;

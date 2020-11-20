@@ -20,10 +20,16 @@ void PaintArea::setPen(QPen p)
     update ();
 }
 
+void PaintArea::setFillRule(Qt::FillRule rule)
+{
+    fillRule = rule;
+    update ();   // 重画绘制区窗体
+}
+
 void PaintArea::setBrush(QBrush b)
 {
     brush = b;
-    update ();  // 重画绘制区窗体
+    update ();
 }
 
 void PaintArea::paintEvent(QPaintEvent *)
